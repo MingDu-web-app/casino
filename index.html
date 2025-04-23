@@ -94,13 +94,29 @@
             }, 50);
         }
 
-        function stopReelSpin(intervalId) {
+        function stopReelSpin(intervalId, reel, forceSymbol = null) {
             clearInterval(intervalId);
+            if (forceSymbol) {
+                reel.innerHTML = forceSymbol; // 特定のシンボルで停止
+            }
         }
 
         document.addEventListener("keydown", (event) => {
             if (event.code === "Space") {
                 event.preventDefault(); // スクロール防止
+
+                // Shift + Space の場合
+                if (event.shiftKey) {
+                    if (spacePressCount >= 1 && spacePressCount <= 3) {
+                        const reelIndex = spacePressCount - 1;
+                        stopReelSpin(spinIntervals[reelIndex], reels[reelIndex], "7️⃣"); // 7️⃣ で停止
+                        triggerParticles(reels[reelIndex]);
+                        spacePressCount++;
+                    }
+                    return; // Shift + Space の場合、通常の処理はスキップ
+                }
+
+                // 通常のスペースキー処理
                 spacePressCount++;
 
                 if (spacePressCount === 1 || spacePressCount === 5) {
@@ -108,9 +124,9 @@
                     spinIntervals = reels.map(reel => startReelSpin(reel));
                     if (spacePressCount === 5) spacePressCount = 1; // カウントをリセット
                 } else if (spacePressCount >= 2 && spacePressCount <= 4) {
-                    // 各リールを停止
+                    // 各リールを通常停止
                     const reelIndex = spacePressCount - 2;
-                    stopReelSpin(spinIntervals[reelIndex]);
+                    stopReelSpin(spinIntervals[reelIndex], reels[reelIndex]);
                     triggerParticles(reels[reelIndex]);
                 }
             }
