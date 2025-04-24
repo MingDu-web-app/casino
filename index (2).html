@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3Dスロットマシン</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('image.jpeg') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+            animation: background-flash 1.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes background-flash {
+            0% { filter: brightness(1); }
+            100% { filter: brightness(1.5); }
+        }
+
+        .slot-machine {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(255, 255, 255, 0.8), 0 0 120px rgba(255, 0, 255, 0.4);
+            z-index: 1;
+        }
+
+        .reels {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .reel-container {
+            perspective: 1200px;
+            margin: 0 15px;
+        }
+
+        .reel {
+            width: 120px;
+            height: 200px;
+            background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            color: #fff;
+            box-shadow: 0 0 40px white, 0 0 80px #ff0;
+            transform-style: preserve-3d;
+            transition: transform 0.8s ease-out;
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        /* 桜エフェクト */
+        .sakura {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="slot-machine">
+        <div class="reels">
+            <div class="reel-container"><div class="reel" id="reel1"></div></div>
+            <div class="reel-container"><div class="reel" id="reel2"></div></div>
+            <div class="reel-container"><div class="reel" id="reel3"></div></div>
+        </div>
+    </div>
+
+    <script>
+        const symbols = ["🍒", "🍋", "🍉", "🍇", "🔔", "7️⃣"];
+        const reels = [
+            document.getElementById("reel1"),
+            document.getElementById("reel2"),
+            document.getElementById("reel3")
+        ];
+
+        let spinIntervals = [];
+        let spacePressCount = 0;
+
+        function startReelSpin(reel) {
+            return setInterval(() => {
+                reel.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
+            }, 50);
+        }
+
+        function stopReelSpin(intervalId, reel, forceSymbol = null) {
+            clearInterval(intervalId);
+            if (forceSymbol) {
+                reel.innerHTML = forceSymbol; // 特定のシンボルで停止
+            }
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.code === "Space") {
+                event.preventDefault(); // スクロール防止
+
+                // Shift + Space の場合
+                if (event.shiftKey) {
+                    if (spacePressCount >= 1 && spacePressCount <= 3) {
+                        const reelIndex = spacePressCount - 1;
+                        stopReelSpin(spinIntervals[reelIndex], reels[reelIndex], "7️⃣"); // 7️⃣ で停止
+                        triggerParticles(reels[reelIndex]);
+                        spacePressCount++;
+                    }
+                    return; // Shift + Space の場合、通常の処理はスキップ
+                }
+
+                // 通常のスペースキー処理
+                spacePressCount++;
+
+                if (spacePressCount === 1 || spacePressCount === 5) {
+                    // スピン開始または再スタート
+                    spinIntervals = reels.map(reel => startReelSpin(reel));
+                    if (spacePressCount === 5) spacePressCount = 1; // カウントをリセット
+                } else if (spacePressCount >= 2 && spacePressCount <= 4) {
+                    // 各リールを通常停止
+                    const reelIndex = spacePressCount - 2;
+                    stopReelSpin(spinIntervals[reelIndex], reels[reelIndex]);
+                    triggerParticles(reels[reelIndex]);
+                }
+            }
+        });
+
+        function triggerParticles(element) {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement("div");
+                particle.className = "particle";
+                particle.style.left = `${element.offsetLeft + Math.random() * element.offsetWidth}px`;
+                particle.style.top = `${element.offsetTop}px`;
+                particle.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                document.body.appendChild(particle);
+
+                setTimeout(() => particle.remove(), 2000); // パーティクルの寿命
+            }
+        }
+
+        // 桜を降らせる関数
+        function createSakura() {
+            const sakura = document.createElement('img');
+            sakura.src = 'sakura.png'; // 画像ファイルのパス
+            sakura.classList.add('sakura');
+            sakura.style.left = Math.random() * 100 + 'vw'; // ランダムなX位置
+            sakura.style.animationDuration = Math.random() * 3 + 2 + 's'; // ランダムなアニメーション速度
+            sakura.style.opacity = Math.random(); // ランダムな透明度
+
+            document.body.appendChild(sakura);
+
+            // アニメーションが終わったら削除
+            sakura.addEventListener('animationend', () => {
+                sakura.remove();
+            });
+        }
+
+        // 一定間隔で桜を生成
+        setInterval(createSakura, 300);
+    </script>
+</body>
+</html>
