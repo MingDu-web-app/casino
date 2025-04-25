@@ -3,181 +3,553 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3Dスロットマシン</title>
+    <title>クールなスロット演出（揃い演出後200ms待機）</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Segoe UI", "Arial", sans-serif;
+            background: radial-gradient(ellipse at center, #232526 0%, #0f2027 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: url('image.jpeg') no-repeat center center fixed;
-            background-size: cover;
-            overflow: hidden;
-            animation: background-flash 1.5s infinite alternate ease-in-out;
+            touch-action: manipulation;
         }
-
-        @keyframes background-flash {
-            0% { filter: brightness(1); }
-            100% { filter: brightness(1.5); }
-        }
-
         .slot-machine {
-            text-align: center;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 60px rgba(255, 255, 255, 0.8), 0 0 120px rgba(255, 0, 255, 0.4);
-            z-index: 1;
+            background: linear-gradient(135deg,#1a1a2e 85%,#16213e 100%);
+            padding: 40px 48px;
+            border-radius: 30px;
+            box-shadow: 0 8px 60px 8px #000a, 0 0 0 10px #ffffff0d;
+            border: 3px solid #fff3;
+            position: relative;
         }
-
+        .slot-machine::before, .slot-machine::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #ffefba44, #ffffff33 60%, #ffefba44);
+            z-index: 2;
+        }
+        .slot-machine::before {
+            top: -18px;
+            filter: blur(2px);
+        }
+        .slot-machine::after {
+            bottom: -18px;
+            filter: blur(4px);
+        }
+        .title {
+            color: #fff;
+            font-size: 2.1em;
+            letter-spacing: 0.16em;
+            margin-bottom: 24px;
+            text-shadow: 0 2px 8px #000c;
+            font-weight: bold;
+            text-align: center;
+        }
         .reels {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
+            gap: 32px;
         }
-
         .reel-container {
-            perspective: 1200px;
-            margin: 0 15px;
+            width: 110px;
+            height: 210px;
+            overflow: hidden;
+            position: relative;
+            border-radius: 20px;
+            background: linear-gradient(160deg, #232526 60%, #414345 100%);
+            border: 4px solid #ffefba;
+            box-shadow: 0 6px 36px 0 #f5b04244, 0 0 0 6px #fff3 inset;
+            outline: 2px solid #ffefba44;
+            outline-offset: 3px;
         }
-
         .reel {
-            width: 120px;
-            height: 200px;
-            background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
-            border-radius: 10px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+        }
+        .symbol {
+            width: 100%;
+            height: 70px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 3em;
+            font-size: 2.6em;
             color: #fff;
-            box-shadow: 0 0 40px white, 0 0 80px #ff0;
-            transform-style: preserve-3d;
-            transition: transform 0.8s ease-out;
+            text-shadow: 0 4px 8px #000c, 0 0 6px #ffe;
+            user-select: none;
+            filter: drop-shadow(0 0 6px #ffefba99);
         }
-
-        .controls {
-            margin-top: 20px;
-        }
-
-        /* 桜エフェクト */
-        .sakura {
-            position: absolute;
-            width: 30px;
-            height: 30px;
+        .reel-container::before {
+            content: "";
             pointer-events: none;
-            animation: fall linear infinite;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(120deg, #fff5 10%, #fff1 45%, #fff0 70%);
+            z-index: 3;
         }
-
-        @keyframes fall {
-            0% { transform: translateY(-100px) rotate(0deg); }
-            100% { transform: translateY(100vh) rotate(360deg); }
+        .side-bar {
+            position: absolute;
+            top: 40px;
+            bottom: 40px;
+            width: 16px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #ffefba 20%, #f5b042 80%);
+            box-shadow: 0 0 12px 2px #ffefba88;
+            z-index: 10;
+        }
+        .side-bar.left {left: -28px;}
+        .side-bar.right {right: -28px;}
+        .spin-tip {
+            color: #ffefba;
+            margin: 24px auto 0 auto;
+            text-align: center;
+            font-size: 1.1em;
+            letter-spacing: 0.06em;
+            opacity: 0.8;
+            font-weight: bold;
+        }
+        .win-message {
+            color: #ffefba;
+            margin: 24px auto 0 auto;
+            text-align: center;
+            font-size: 1.5em;
+            letter-spacing: 0.06em;
+            opacity: 1;
+            font-weight: bold;
+            display: none;
+            text-shadow: 0 0 16px #fff7b5, 0 0 4px #ffefba;
+            animation: fadeIn 1s;
+        }
+        .win-message.show {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8);}
+            to   { opacity: 1; transform: scale(1);}
+        }
+        .symbol.win {
+            background: linear-gradient(90deg, #fff6a8 40%, #ffe082 60%);
+            color: #f5b042;
+            filter: drop-shadow(0 0 24px #fff4a0) drop-shadow(0 0 12px #fff4a0);
+            animation: win-pop 0.8s cubic-bezier(.8,-0.4,.2,1.4) alternate 2;
+        }
+        @keyframes win-pop {
+            0%   { transform: scale(1);}
+            50%  { transform: scale(1.36) rotate(-5deg);}
+            100% { transform: scale(1.18) rotate(2deg);}
+        }
+        .reel-container.win {
+            animation: glow 1s infinite alternate;
+        }
+        @keyframes glow {
+            0% {
+                box-shadow: 0 0 20px 5px #ffefba, 0 0 40px 10px #f5b042;
+            }
+            100% {
+                box-shadow: 0 0 30px 10px #f5b042, 0 0 60px 15px #ffefba;
+            }
+        }
+        @keyframes flash {
+            0%   { background: #fffab2;}
+            100% { background: radial-gradient(ellipse at center, #232526 0%, #0f2027 100%);}
         }
     </style>
 </head>
 <body>
-    <div class="slot-machine">
+    <!-- 効果音CDN読み込み -->
+    <audio id="se-spin" src="https://cdn.jsdelivr.net/gh/zhayujie/SoundEffectLibrary/slot-spin.mp3"></audio>
+    <audio id="se-stop" src="https://cdn.jsdelivr.net/gh/zhayujie/SoundEffectLibrary/slot-stop.mp3"></audio>
+    <audio id="se-win" src="https://cdn.jsdelivr.net/gh/zhayujie/SoundEffectLibrary/slot-win.mp3"></audio>
+    <div class="slot-machine" id="slotMachine">
+        <div class="side-bar left"></div>
+        <div class="side-bar right"></div>
+        <div class="title">SLOT MACHINE</div>
         <div class="reels">
-            <div class="reel-container"><div class="reel" id="reel1"></div></div>
-            <div class="reel-container"><div class="reel" id="reel2"></div></div>
-            <div class="reel-container"><div class="reel" id="reel3"></div></div>
+            <div class="reel-container">
+                <div class="reel" id="reel1"></div>
+            </div>
+            <div class="reel-container">
+                <div class="reel" id="reel2"></div>
+            </div>
+            <div class="reel-container">
+                <div class="reel" id="reel3"></div>
+            </div>
         </div>
+        <div class="spin-tip">スペースキーまたは画面タップは「離した瞬間」受付<br>50ms以内の連打は無効</div>
+        <div class="win-message" id="winMessage"></div>
     </div>
-
     <script>
-        const symbols = ["🍒", "🍋", "🍉", "🍇", "🔔", "7️⃣"];
+        // 効果音用
+        const seSpin = document.getElementById("se-spin");
+        const seStop = document.getElementById("se-stop");
+        const seWin = document.getElementById("se-win");
+
+        const symbols = ["🍒","🍋","🍉","🍇","🔔","7️⃣"];
         const reels = [
             document.getElementById("reel1"),
             document.getElementById("reel2"),
             document.getElementById("reel3")
         ];
+        const winMessage = document.getElementById("winMessage");
+        const symbolHeight = 70;
+        const reelVisibleSymbols = 3;
+        const repeatCount = 6;
+        let animationIds = [null, null, null];
+        let animating = [false, false, false];
+        let spinParams = [
+            {speed: 1.2, offset: 0.0},
+            {speed: 1.0, offset: 0.33},
+            {speed: 0.85, offset: 0.66}
+        ];
+        let step = 0;
+        let isCooling = false;
+        let spacePressed = false;
+        let lastSpaceDownTime = 0;
+        let lastSpaceUpTime = 0;
 
-        let spinIntervals = [];
-        let spacePressCount = 0;
+        // タップ用
+        let pointerDown = false;
 
-        function startReelSpin(reel) {
-            return setInterval(() => {
-                reel.innerHTML = symbols[Math.floor(Math.random() * symbols.length)];
-            }, 50);
+        // 揃い演出時の待機用
+        let winWaitPromise = Promise.resolve();
+        let waitingAfterWin = false;
+
+        // 入力受付共通化
+        async function handleInputDown() {
+            if (!spacePressed) {
+                spacePressed = true;
+                lastSpaceDownTime = performance.now();
+            }
+        }
+        async function handleInputUp() {
+            if (!spacePressed) return;
+            let now = performance.now();
+            let duration = now - lastSpaceDownTime;
+            // 50ms以下の連打は無効
+            if(duration < 50) {
+                spacePressed = false;
+                return;
+            }
+            if(isCooling || waitingAfterWin) {
+                spacePressed = false;
+                return;
+            }
+            step = (step + 1) % 4;
+            if(step === 1) {
+                for (let i = 0; i < 3; i++) animating[i] = false;
+                for (let i = 0; i < 3; i++) if (animationIds[i]) cancelAnimationFrame(animationIds[i]);
+                startSpin();
+            } else if(step === 2) {
+                stopLeft();
+            } else if(step === 3) {
+                stopMiddle();
+            } else if(step === 0) {
+                await stopRightWithWinWait();
+                isCooling = true;
+                setTimeout(() => { isCooling = false; }, 50);
+            }
+            lastSpaceUpTime = now;
+            spacePressed = false;
         }
 
-        function stopReelSpin(intervalId, reel, forceSymbol = null) {
-            clearInterval(intervalId);
-            if (forceSymbol) {
-                reel.innerHTML = forceSymbol; // 特定のシンボルで停止
+        function shuffle(array) {
+            let arr = array.slice();
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function fillReel(reel) {
+            reel.innerHTML = "";
+            let arr = shuffle(symbols);
+            let all = [];
+            for (let i = 0; i < repeatCount; i++) all = all.concat(shuffle(arr));
+            all = all.concat(all.slice(0, reelVisibleSymbols));
+            for (const s of all) {
+                const d = document.createElement("div");
+                d.className = "symbol";
+                d.textContent = s;
+                reel.appendChild(d);
             }
         }
 
-        document.addEventListener("keydown", (event) => {
-            if (event.code === "Space") {
-                event.preventDefault(); // スクロール防止
+        reels.forEach(fillReel);
 
-                // Shift + Space の場合
-                if (event.shiftKey) {
-                    if (spacePressCount >= 1 && spacePressCount <= 3) {
-                        const reelIndex = spacePressCount - 1;
-                        stopReelSpin(spinIntervals[reelIndex], reels[reelIndex], "7️⃣"); // 7️⃣ で停止
-                        triggerParticles(reels[reelIndex]);
-                        spacePressCount++;
-                    }
-                    return; // Shift + Space の場合、通常の処理はスキップ
+        function animateReelReverse(reel, idx, speed = 1.2, offset = 0) {
+            const totalSymbols = reel.children.length;
+            const scrollHeight = symbolHeight * (totalSymbols - reelVisibleSymbols);
+            let start = null;
+            animating[idx] = true;
+            function stepAnim(ts) {
+                if (!animating[idx]) return;
+                if (!start) start = ts;
+                let progress = ((ts - start) / (speed * 1000) + offset) % 1;
+                let y = scrollHeight - (progress * scrollHeight);
+                reel.style.transform = `translateY(${-y}px)`;
+                animationIds[idx] = requestAnimationFrame(stepAnim);
+            }
+            animationIds[idx] = requestAnimationFrame(stepAnim);
+        }
+
+        function stopAndAlign(reel, idx, cb) {
+            animating[idx] = false;
+            if (animationIds[idx]) cancelAnimationFrame(animationIds[idx]);
+            let currentMatrix = getComputedStyle(reel).transform;
+            let y = 0;
+            if (currentMatrix !== "none") {
+                const match = currentMatrix.match(/matrix.*\((.+)\)/);
+                if (match) {
+                    let vals = match[1].split(', ');
+                    y = parseFloat(vals[5]);
                 }
-
-                // 通常のスペースキー処理
-                spacePressCount++;
-
-                if (spacePressCount === 1 || spacePressCount === 5) {
-                    // スピン開始または再スタート
-                    spinIntervals = reels.map(reel => startReelSpin(reel));
-                    if (spacePressCount === 5) spacePressCount = 1; // カウントをリセット
-                } else if (spacePressCount >= 2 && spacePressCount <= 4) {
-                    // 各リールを通常停止
-                    const reelIndex = spacePressCount - 2;
-                    stopReelSpin(spinIntervals[reelIndex], reels[reelIndex]);
-                    triggerParticles(reels[reelIndex]);
+            }
+            y = -y;
+            let currentIndex = Math.round(y / symbolHeight);
+            let centerOffset = symbolHeight * (currentIndex + 1) - y;
+            let targetY = y + centerOffset;
+            let duration = 400;
+            let start = null;
+            function alignStep(ts) {
+                if (!start) start = ts;
+                let progress = Math.min(1, (ts - start) / duration);
+                let eased = 1 - Math.pow(1 - progress, 3);
+                let thisY = y + centerOffset * eased;
+                reel.style.transform = `translateY(${-thisY}px)`;
+                if (progress < 1) {
+                    requestAnimationFrame(alignStep);
+                } else {
+                    let finalIndex = Math.round(thisY / symbolHeight);
+                    let finalY = finalIndex * symbolHeight;
+                    reel.style.transform = `translateY(${-finalY}px)`;
+                    if (cb) cb(finalIndex % symbols.length);
                 }
             }
-        });
-
-        function triggerParticles(element) {
-            for (let i = 0; i < 20; i++) {
-                const particle = document.createElement("div");
-                particle.className = "particle";
-                particle.style.left = `${element.offsetLeft + Math.random() * element.offsetWidth}px`;
-                particle.style.top = `${element.offsetTop}px`;
-                particle.style.animationDuration = `${Math.random() * 2 + 1}s`;
-                document.body.appendChild(particle);
-
-                setTimeout(() => particle.remove(), 2000); // パーティクルの寿命
-            }
+            requestAnimationFrame(alignStep);
         }
 
-        // 桜を降らせる関数
-        function createSakura() {
-            const sakura = document.createElement('img');
-            sakura.src = 'sakura.png'; // 画像ファイルのパス
-            sakura.classList.add('sakura');
-            sakura.style.left = Math.random() * 100 + 'vw'; // ランダムなX位置
-            sakura.style.animationDuration = Math.random() * 3 + 2 + 's'; // ランダムなアニメーション速度
-            sakura.style.opacity = Math.random(); // ランダムな透明度
-
-            document.body.appendChild(sakura);
-
-            // アニメーションが終わったら削除
-            sakura.addEventListener('animationend', () => {
-                sakura.remove();
+        function clearWinEffects() {
+            winMessage.classList.remove('show');
+            winMessage.textContent = "";
+            reels.forEach(reel => reel.parentNode.classList.remove('win'));
+            reels.forEach(reel => {
+                [...reel.children].forEach(sym => sym.classList.remove('win'));
             });
         }
 
-        // 一定間隔で桜を生成
-        setInterval(createSakura, 300);
+        function showWinEffects(type, winPositions, emoji, multi) {
+            if (multi) {
+                winMessage.textContent = `🌈 ダブルラインボーナス! ${emoji.repeat(3)} 🌈`;
+            } else if (type === 'row') {
+                winMessage.textContent = `🎉 横揃い! ${emoji.repeat(3)} 🎉`;
+            } else if (type === 'diag') {
+                winMessage.textContent = `🎉 ななめ揃い! ${emoji.repeat(3)} 🎉`;
+            } else if (type === 'jackpot') {
+                winMessage.textContent = `🎉 JACKPOT! ${emoji.repeat(3)} 🎉`;
+            }
+            winMessage.classList.add('show');
+            for (let col = 0; col < 3; col++) {
+                reels[col].parentNode.classList.add('win');
+            }
+            for (const [col, row] of winPositions) {
+                reels[col].children[row].classList.add("win");
+            }
+            // 効果音再生
+            seWin.currentTime = 0;
+            seWin.play();
+        }
+
+        function getVisibleSymbols() {
+            let indexes = [];
+            for (let col = 0; col < 3; col++) {
+                const reel = reels[col];
+                let currentMatrix = getComputedStyle(reel).transform;
+                let y = 0;
+                if (currentMatrix !== "none") {
+                    const match = currentMatrix.match(/matrix.*\((.+)\)/);
+                    if (match) {
+                        let vals = match[1].split(', ');
+                        y = parseFloat(vals[5]);
+                    }
+                }
+                y = -y;
+                let firstIdx = Math.round(y / symbolHeight);
+                indexes.push(
+                    [firstIdx, firstIdx+1, firstIdx+2]
+                );
+            }
+            let grid = [[],[],[]];
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 3; col++) {
+                    grid[row][col] = reels[col].children[indexes[col][row]].textContent;
+                }
+            }
+            return { grid, indexes };
+        }
+
+        // checkWinの返り値で揃ったか判定し、trueなら200ms待機
+        function checkWin() {
+            clearWinEffects();
+            const { grid, indexes } = getVisibleSymbols();
+            let lines = [];
+
+            // 横揃い
+            for (let row=0; row<3; row++) {
+                if (grid[row][0] === grid[row][1] && grid[row][1] === grid[row][2]) {
+                    lines.push({
+                        type: 'row',
+                        emoji: grid[row][0],
+                        winPositions: [
+                            [0, indexes[0][row]],
+                            [1, indexes[1][row]],
+                            [2, indexes[2][row]],
+                        ]
+                    });
+                }
+            }
+            // ななめ揃い（左上→右下）
+            if (grid[0][0] === grid[1][1] && grid[1][1] === grid[2][2]) {
+                lines.push({
+                    type: 'diag',
+                    emoji: grid[0][0],
+                    winPositions: [
+                        [0, indexes[0][0]],
+                        [1, indexes[1][1]],
+                        [2, indexes[2][2]],
+                    ]
+                });
+            }
+            // ななめ揃い（右上→左下）
+            if (grid[0][2] === grid[1][1] && grid[1][1] === grid[2][0]) {
+                lines.push({
+                    type: 'diag',
+                    emoji: grid[0][2],
+                    winPositions: [
+                        [0, indexes[0][2]],
+                        [1, indexes[1][1]],
+                        [2, indexes[2][0]],
+                    ]
+                });
+            }
+            // 真ん中縦揃い（ジャックポット扱い）
+            if (grid[1][0] === grid[1][1] && grid[1][1] === grid[1][2]) {
+                lines.push({
+                    type: 'jackpot',
+                    emoji: grid[1][0],
+                    winPositions: [
+                        [0, indexes[0][1]],
+                        [1, indexes[1][1]],
+                        [2, indexes[2][1]],
+                    ]
+                });
+            }
+            if (lines.length === 0) {
+                // 揃いなし
+                return false;
+            } else if (lines.length === 1) {
+                const l = lines[0];
+                showWinEffects(l.type, l.winPositions, l.emoji, false);
+                return true;
+            } else {
+                let allWinPos = [];
+                let emoji = lines[0].emoji;
+                lines.forEach(l => {
+                    allWinPos = allWinPos.concat(l.winPositions);
+                });
+                showWinEffects(lines[0].type, allWinPos, emoji, true);
+                document.body.style.animation = "flash 0.4s";
+                setTimeout(()=>{ document.body.style.animation = ""; }, 400);
+                return true;
+            }
+        }
+
+        function startSpin() {
+            clearWinEffects();
+            reels.forEach(fillReel);
+            for (let i = 0; i < 3; i++) {
+                animateReelReverse(reels[i], i, spinParams[i].speed, Math.random());
+            }
+            seSpin.currentTime = 0;
+            seSpin.play();
+        }
+        function stopLeft(cb) {
+            stopAndAlign(reels[0], 0, ()=>{
+                seStop.currentTime = 0; seStop.play();
+                if(cb) cb();
+            });
+        }
+        function stopMiddle(cb) {
+            stopAndAlign(reels[1], 1, ()=>{
+                seStop.currentTime = 0; seStop.play();
+                if(cb) cb();
+            });
+        }
+
+        // 揃い演出後200ms待機
+        async function stopRightWithWinWait(cb) {
+            stopAndAlign(reels[2], 2, async ()=>{
+                seStop.currentTime = 0; seStop.play();
+                // 揃い演出後は200ms待機
+                const win = checkWin();
+                if(win) {
+                    waitingAfterWin = true;
+                    await new Promise(r=>setTimeout(r, 200));
+                    waitingAfterWin = false;
+                }
+                if(cb) cb();
+            });
+        }
+
+        // スペースキー長押し＆50ms以内再入力無効＆タップ対応
+        window.addEventListener('keydown', (e)=>{
+            if ((e.code === "Space" || e.key === " ") && !spacePressed) {
+                handleInputDown();
+            }
+        });
+        window.addEventListener('keyup', (e)=>{
+            if ((e.code === "Space" || e.key === " ")) {
+                handleInputUp();
+            }
+        });
+        // タップ/クリック対応 (タッチstart/end, マウスdown/up)
+        const slotMachine = document.getElementById('slotMachine');
+        slotMachine.addEventListener('touchstart', function(e){
+            e.preventDefault();
+            if (!pointerDown) {
+                pointerDown = true;
+                handleInputDown();
+            }
+        }, {passive: false});
+        slotMachine.addEventListener('touchend', function(e){
+            e.preventDefault();
+            if (pointerDown) {
+                handleInputUp();
+                pointerDown = false;
+            }
+        }, {passive: false});
+        slotMachine.addEventListener('mousedown', function(e){
+            if (!pointerDown) {
+                pointerDown = true;
+                handleInputDown();
+            }
+        });
+        slotMachine.addEventListener('mouseup', function(e){
+            if (pointerDown) {
+                handleInputUp();
+                pointerDown = false;
+            }
+        });
+
+        window.addEventListener('blur', ()=>{ spacePressed = false; pointerDown = false; });
+        window.addEventListener('click', ()=>window.focus());
     </script>
 </body>
 </html>
